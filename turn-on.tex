@@ -1,5 +1,179 @@
-\chapter{Turn on the system}
+\chapter{Ligando o sistema}
 \label{chap:turn-on}
 
-Em algumas ocasiões - falha no sistema de ar condicionado ou prolongada falta de energia não atendida pelo no-break - o \textit{cluster} deverá ser desligado ou desligará por si só. Para religá-lo, são necessários alguns procedimentos.
+Em algumas ocasiões - falha no sistema de ar condicionado ou prolongada falta de energia não atendida pelo no-break - o \textit{cluster} deverá ser desligado ou desligará por si só. Como proceder:
 
+\begin{enumerate}
+    \item Religar todos os computadores e o NAS e aguardar que todos terminem o processo de boot. 
+\end{enumerate}
+
+Os volumes \textit{gluster} não serão montados automaticamente. Isso pode ser visto com o comando:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@playerone ~] df -h | grep gv
+[root@playerone ~] 
+\end{lstlisting}
+
+\section{Montar volumes}
+Nada retornado mostra que os volumes não estão montados. Para montar todos os volumes do sistema (notar o comando bsh montando para todos os nós:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@playerone cfx] mount -a  
+[root@playerone cfx] df -h | grep gv
+playerone:/gv-apps              1.1T  191G  932G  17% /gv/apps
+playerone:/gv-data              2.5T  526G  2.0T  22% /gv/data
+[root@playerone cfx] 
+[root@playerone cfx] bsh mount -a
+*****irineu*****
+*****insolente*****
+*****galo*****
+*****marvin*****
+*****mordac*****
+*****demoninho*****
+*****zumbi*****
+*****coragem*****
+[root@playerone cfx] bsh 'df -h | grep gv'
+*****irineu*****
+irineu:/gv-data                 2.5T  526G  2.0T  22% /gv/data
+playerone:/gv-apps              1.1T  191G  932G  17% /gv/apps
+*****insolente*****
+playerone:/gv-apps              1.1T  191G  932G  17% /gv/apps
+insolente:/gv-data              2.5T  526G  2.0T  22% /gv/data
+*****galo*****
+playerone:/gv-apps              1.1T  191G  932G  17% /gv/apps
+galo:/gv-data                   2.5T  526G  2.0T  22% /gv/data
+*****marvin*****
+marvin:/gv-data                 2.5T  526G  2.0T  22% /gv/data
+playerone:/gv-apps              1.1T  191G  932G  17% /gv/apps
+*****mordac*****
+mordac:/gv-data                 2.5T  526G  2.0T  22% /gv/data
+playerone:/gv-apps              1.1T  191G  932G  17% /gv/apps
+*****demoninho*****
+demoninho:/gv-data              2.5T  526G  2.0T  22% /gv/data
+playerone:/gv-apps              1.1T  191G  932G  17% /gv/apps
+*****zumbi*****
+zumbi:/gv-data                  2.5T  526G  2.0T  22% /gv/data
+playerone:/gv-apps              1.1T  191G  932G  17% /gv/apps
+*****coragem*****
+coragem:/gv-data                2.5T  526G  2.0T  22% /gv/data
+playerone:/gv-apps              1.1T  191G  932G  17% /gv/apps
+[root@playerone cfx]
+\end{lstlisting}
+
+
+O serviço do gluster entrará automaticamente e, uma vez que a montagem dos volumes esteja finalizada, funcionará normalmente. 
+
+\section{Iniciar o \textit{slurm}}
+
+Este é o sistema que controla a fila de processos dos usuários a serem executados no cluster, o controlador de
+recursos. Este sistema não é automaticamente estabelecido ao re-ligar o sistema e deve sê-lo manualmente.
+
+São três serviços (\textit{daemons}):
+
+\begin{enumerate}
+\item \texttt{slurmctld.service}: Controlador propriamente dito. Recebe as informações dos nós e do mestre e controla
+  a fila e o envio de \textit{jobs}.
+  \item \texttt{slurmdbd.service}: Armazenador de dados. Os dados de utilização do cluster (especificamente, de uso do sistema de controle de fila) são coletados por esse serviço e armazenado em um banco de dados. Este banco de dados é provido e controlado por outro serviço.
+  \item \texttt{slurmd.service}: O serviço local que controla os recursos de cada máquina. Há um versão deste serviço rodando em cada nó e uma no mestre, já que este também é um recurso do sistema.
+\end{enumerate}
+
+Notar que a ordem em que são iniciados os serviços não é só importante, mas obrigatória. Caso os serviços
+sejam iniciados fora de ordem, o \textit{slurm} não funcionará corretamente.
+
+Como iniciar o \textit{slurm}: %e verificar se foi iniciado corretamente:
+
+\begin{enumerate}
+\item iniciar no mestre o serviço de bando dados (\texttt{slurmdbd})
+\item iniciar no mestre o serviço de controle (\texttt{slurmctld})
+\item iniciar no mestre o serviço de local (\texttt{slurmd})
+\item iniciar no nós o serviço de local (\texttt{slurmd})
+\end{enumerate}
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@playerone cfx] systemctl start slurmdbd
+[root@playerone cfx] systemctl start slurmctld
+[root@playerone cfx] systemctl start slurmd
+[root@playerone cfx] bsh systemctl start slurmd
+*****irineu*****
+*****insolente*****
+*****galo*****
+*****marvin*****
+*****mordac*****
+*****demoninho*****
+*****zumbi*****
+*****coragem*****
+[root@playerone cfx]
+\end{lstlisting}
+
+Verifique se o serviço subiu corretamente verificando a fila de \texttt{jobs}:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@playerone cfx] squeue 
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+[root@playerone cfx] 
+\end{lstlisting}
+
+
+% ---------------------------------------------------------------------------------------------------------
+% Se quiser mostrar os status, voltar com isso pro lstlisting
+% ---------------------------------------------------------------------------------------------------------
+%[root@playerone cfx] systemctl status slurmdbd
+%. slurmdbd.service - Slurm DBD accounting daemon
+%   Loaded: loaded (/usr/lib/systemd/system/slurmdbd.service; disabled; vendor preset: disabled)
+%   Active: active (running) since Thu 2019-10-03 10:14:26 -03; 5s ago
+%  Process: 6897 ExecStart=/usr/sbin/slurmdbd $SLURMDBD_OPTIONS (code=exited, status=0/SUCCESS)
+% Main PID: 6899 (slurmdbd)
+%    Tasks: 5
+%   CGroup: /system.slice/slurmdbd.service
+%           |- 6899 /usr/sbin/slurmdbd
+%
+%Oct 03 10:14:26 playerone.usuarios.cdtn.br systemd[1]: Starting Slurm DBD accounting daemon...
+%Oct 03 10:14:26 playerone.usuarios.cdtn.br systemd[1]: PID file /var/run/slurmdbd.pid not readable (yet?) after start.
+%Oct 03 10:14:26 playerone.usuarios.cdtn.br systemd[1]: Started Slurm DBD accounting daemon.
+% ---------------------------------------------------------------------------------------------------------
+
+\section{Iniciar o \textit{Ganglia}}
+
+Este é o sistema que coleta os dados de utilização dos nós e do mestre e o apresenta em formato gráfico via página
+web \href{https://playerone.usuarios.cdtn.br}.
+
+O serviço de páginas do cluster é o Apache e o nome do serviço é \texttt{httpd}. Este serviço é iniciado automaticamente e
+a página do LTHN estará no ar normalmente. Entretanto, não apresentará os dados de uso das máquinas. Isso é feito pelo
+Ganglia, que não é re-estabelecido automaticamente.
+
+O Ganglia é formado por três serviços distintos:
+%-------------------------------------------------------------------------------------------------------------
+\chapter{O \textit{gluster não funciona}}
+
+O sistema \textit{gluster} precisa que todas as máquinas esteja sincronizadas. O sistema está configurado para buscar
+a data atual em um local de rede. Caso o serviço não esteja funcionando ou as máquinas estejam com horários errados, o \textit{gluster} inicializará, mas ocorrerão erros espuŕios de difícil detecção.\\
+
+Verificar a hora atual nas máquinas do cluster:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+  [root@playerone ~] date
+  Thu Oct  3 09:37:52 -03 2019
+  [root@playerone ~] bsh date
+  *****irineu*****
+  Thu Oct  3 09:38:22 -03 2019
+  *****insolente*****
+  Thu Oct  3 09:38:23 -03 2019
+  *****galo*****
+  Thu Oct  3 09:38:23 -03 2019
+  *****marvin*****
+  Thu Oct  3 09:38:24 -03 2019
+  *****mordac*****
+  Thu Oct  3 09:38:24 -03 2019
+  *****demoninho*****
+  Thu Oct  3 09:38:24 -03 2019
+  *****zumbi*****
+  Thu Oct  3 09:38:25 -03 2019
+  *****coragem*****
+  Thu Oct  3 09:38:25 -03 2019
+\end{lstlisting}
+
+As diferenças em segundos estão corretas, já que o comando é executado sequencialmente.
+No cluster LTHN, o serviço \texttt{chronyd} é quem controla o serviço \texttt{ntpd}. As configurações
+e alterações devem ser feitas nele.
+
+\textbf{IMPORTANTE: Desligar o horário de verão que está configurado para o sistema} ao voltar de férias. Nota para o Vitor.

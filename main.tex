@@ -10,7 +10,7 @@
 % Windows  Miktex com Led
 % Linux  texlive com kile
 
-\documentclass[12pt]{report} %aqui fala o tipo de documento e o tamanho da fonte. Opções: tamanho do texto (10pt, 12pt, 14pt), formato do papel (a4paper, a5paper, b5paper, letterpaper, legalpaper, executivepaper), o número de colunas (onecolumn, twocolumn), entre outras opções.
+\documentclass[11pt,a4]{report} %aqui fala o tipo de documento e o tamanho da fonte. Opções: tamanho do texto (10pt, 12pt, 14pt), formato do papel (a4paper, a5paper, b5paper, letterpaper, legalpaper, executivepaper), o número de colunas (onecolumn, twocolumn), entre outras opções.
 %Por exemplo, [12pt,a4,twocolumn].
 %classe: article, report, letter, book ou slides. Instalar abnt para quem está pensando no tf
 \usepackage[brazilian]{babel} %hifenização em português do brasil
@@ -24,7 +24,9 @@
 \usepackage{graphicx} % Pra incluir o logo do laboratorio
 \usepackage{xcolor}
 \usepackage{newunicodechar}
+\usepackage{textcomp} % Nao sei pra que serve, mas esta por causa do listings
 \usepackage{listings} % Pra poder listar como comandos bash
+\lstset{upquote=true} % pras aspas ficarem retas
 
 %\externaldocument{prana}
 %\externaldocument{pytera}
@@ -82,11 +84,16 @@
 
 \textbf{Não} há neste texto referência ao funcionamento, arquitetura
   ou topologia do \textit{cluster} LTHN. Essas informações estão em outros documentos referenciados. Tampouco pretende-se
-  que seja usado por quem não tenha conhecimento avançado do sistema operacional Linux.
+  que seja usado por quem não tenha conhecimento avançado do sistema operacional Linux.\\
   
-  \textbf{Todos} os capítulos e seções assumem que o usuário já esteja logado no sistema como superusuário (\texttt{root}).
+  \textbf{Todos} os capítulos e seções assumem que o usuário já esteja logado no sistema como superusuário (\texttt{root}).\\
+  Há alguns scripts implementados com o objetivo de replicar comandos em todos os nós. O script \texttt{bsh} executa o comando dado sequencialmente em todas as máquinas nó. Uso:
 
-\include{turn-on} %Cria uma seção
+  \begin{lstlisting}[language=bash,basicstyle=\small]
+    $ bsh {comando arg1 arg2 ...}
+  \end{lstlisting}
+
+  \include{turn-on} %Cria uma seção
 
 % Added some refernces used in different chapters
 \bibliographystyle{plain}
