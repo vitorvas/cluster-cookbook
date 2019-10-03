@@ -1,0 +1,34 @@
+\chapter{O \textit{gluster não funciona}}
+
+O sistema \textit{gluster} precisa que todas as máquinas esteja sincronizadas. O sistema está configurado para buscar
+a data atual em um local de rede. Caso o serviço não esteja funcionando ou as máquinas estejam com horários errados, o \textit{gluster} inicializará, mas ocorrerão erros espuŕios de difícil detecção.\\
+
+Verificar a hora atual nas máquinas do cluster:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+  [root@playerone ~] date
+  Thu Oct  3 09:37:52 -03 2019
+  [root@playerone ~] bsh date
+  *****irineu*****
+  Thu Oct  3 09:38:22 -03 2019
+  *****insolente*****
+  Thu Oct  3 09:38:23 -03 2019
+  *****galo*****
+  Thu Oct  3 09:38:23 -03 2019
+  *****marvin*****
+  Thu Oct  3 09:38:24 -03 2019
+  *****mordac*****
+  Thu Oct  3 09:38:24 -03 2019
+  *****demoninho*****
+  Thu Oct  3 09:38:24 -03 2019
+  *****zumbi*****
+  Thu Oct  3 09:38:25 -03 2019
+  *****coragem*****
+  Thu Oct  3 09:38:25 -03 2019
+\end{lstlisting}
+
+As diferenças em segundos estão corretas, já que o comando é executado sequencialmente.
+No cluster LTHN, o serviço \texttt{chronyd} é quem controla o serviço \texttt{ntpd}. As configurações
+e alterações devem ser feitas nele.
+
+\textbf{IMPORTANTE: Desligar o horário de verão que está configurado para o sistema} ao voltar de férias. Nota para o Vitor.

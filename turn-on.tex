@@ -15,7 +15,8 @@ Os volumes \textit{gluster} não serão montados automaticamente. Isso pode ser 
 \end{lstlisting}
 
 \section{Montar volumes}
-Nada retornado mostra que os volumes não estão montados. Para montar todos os volumes do sistema (notar o comando bsh montando para todos os nós:
+% ---------------------------------------------------------------------------------------------------------
+Nada retornado mostra que os volumes não estão montados. Para montar todos os volumes do sistema (notar o comando bsh montando para todos os nós):
 
 \begin{lstlisting}[language=bash,basicstyle=\small]
 [root@playerone cfx] mount -a  
@@ -61,20 +62,20 @@ playerone:/gv-apps              1.1T  191G  932G  17% /gv/apps
 \end{lstlisting}
 
 
-O serviço do gluster entrará automaticamente e, uma vez que a montagem dos volumes esteja finalizada, funcionará normalmente. 
+O serviço do gluster entra automaticamente no religamento do sistema, entretanto não opera devido a ausência dos volumes. Uma vez que a montagem dos volumes esteja finalizada, funcionará normal e automaticamente. 
 
 \section{Iniciar o \textit{slurm}}
-
+% ---------------------------------------------------------------------------------------------------------
 Este é o sistema que controla a fila de processos dos usuários a serem executados no cluster, o controlador de
 recursos. Este sistema não é automaticamente estabelecido ao re-ligar o sistema e deve sê-lo manualmente.
 
 São três serviços (\textit{daemons}):
 
 \begin{enumerate}
-\item \texttt{slurmctld.service}: Controlador propriamente dito. Recebe as informações dos nós e do mestre e controla
+\item \texttt{slurmctld}: Controlador propriamente dito. Recebe as informações dos nós e do mestre e controla
   a fila e o envio de \textit{jobs}.
-  \item \texttt{slurmdbd.service}: Armazenador de dados. Os dados de utilização do cluster (especificamente, de uso do sistema de controle de fila) são coletados por esse serviço e armazenado em um banco de dados. Este banco de dados é provido e controlado por outro serviço.
-  \item \texttt{slurmd.service}: O serviço local que controla os recursos de cada máquina. Há um versão deste serviço rodando em cada nó e uma no mestre, já que este também é um recurso do sistema.
+  \item \texttt{slurmdbd}: Armazenador de dados. Os dados de utilização do cluster (especificamente, de uso do sistema de controle de fila) são coletados por esse serviço e armazenado em um banco de dados. Este banco de dados é provido e controlado por outro serviço.
+  \item \texttt{slurmd}: O serviço local que controla os recursos de cada máquina. Há um versão deste serviço rodando em cada nó e uma no mestre, já que este também é um recurso do sistema.
 \end{enumerate}
 
 Notar que a ordem em que são iniciados os serviços não é só importante, mas obrigatória. Caso os serviços
@@ -132,48 +133,34 @@ Verifique se o serviço subiu corretamente verificando a fila de \texttt{jobs}:
 %Oct 03 10:14:26 playerone.usuarios.cdtn.br systemd[1]: Started Slurm DBD accounting daemon.
 % ---------------------------------------------------------------------------------------------------------
 
-\section{Iniciar o \textit{Ganglia}}
 
+\section{Iniciar o \textit{Ganglia}}
+% ---------------------------------------------------------------------------------------------------------
 Este é o sistema que coleta os dados de utilização dos nós e do mestre e o apresenta em formato gráfico via página
-web \href{https://playerone.usuarios.cdtn.br}.
+web \url{https://playerone.usuarios.cdtn.br}.
 
 O serviço de páginas do cluster é o Apache e o nome do serviço é \texttt{httpd}. Este serviço é iniciado automaticamente e
 a página do LTHN estará no ar normalmente. Entretanto, não apresentará os dados de uso das máquinas. Isso é feito pelo
 Ganglia, que não é re-estabelecido automaticamente.
 
-O Ganglia é formado por três serviços distintos:
-%-------------------------------------------------------------------------------------------------------------
-\chapter{O \textit{gluster não funciona}}
+O Ganglia é formado por dois serviços (\textit{daemons}) distintos:
 
-O sistema \textit{gluster} precisa que todas as máquinas esteja sincronizadas. O sistema está configurado para buscar
-a data atual em um local de rede. Caso o serviço não esteja funcionando ou as máquinas estejam com horários errados, o \textit{gluster} inicializará, mas ocorrerão erros espuŕios de difícil detecção.\\
+\begin{enumerate}
+\item \texttt{gmond}: o \texttt{daemon} de monitoramento propriamente dito. Coletor de dados local. Vai em cada nó e no mestre caso este também seja recurso, como no caso do \textit{cluster} LTHN.
+\item \texttt{gmetad}: o serviço que coleta os dados do \texttt{gmond} e de outros \texttt{gmetad} caso exista mais de um e armazena os dados que serão apresentados na interface web.
+\end{enumerate}
 
-Verificar a hora atual nas máquinas do cluster:
+Os serviços são automaticamente iniciados na ligação do sistema. Entretanto, como isso é feito fora de ordem, o coletor de dados do nós não sabe e não é capaz de reconhecer quais os sistemas ativos. Portanto, devem ser reiniciados os
+sistemas locais de monitoramento. Após o \textit{restart} destes serviços, deve ser reiniciado o serviço Apache.
+
+Como iniciar o \textit{Ganglia}?
 
 \begin{lstlisting}[language=bash,basicstyle=\small]
-  [root@playerone ~] date
-  Thu Oct  3 09:37:52 -03 2019
-  [root@playerone ~] bsh date
-  *****irineu*****
-  Thu Oct  3 09:38:22 -03 2019
-  *****insolente*****
-  Thu Oct  3 09:38:23 -03 2019
-  *****galo*****
-  Thu Oct  3 09:38:23 -03 2019
-  *****marvin*****
-  Thu Oct  3 09:38:24 -03 2019
-  *****mordac*****
-  Thu Oct  3 09:38:24 -03 2019
-  *****demoninho*****
-  Thu Oct  3 09:38:24 -03 2019
-  *****zumbi*****
-  Thu Oct  3 09:38:25 -03 2019
-  *****coragem*****
-  Thu Oct  3 09:38:25 -03 2019
+  [root@playerone cfx] systemctl restart gmond
+  [root@playerone cfx] bsh systemctl restart gmond
+  [root@playerone cfx] systemctl restart httpd
 \end{lstlisting}
 
-As diferenças em segundos estão corretas, já que o comando é executado sequencialmente.
-No cluster LTHN, o serviço \texttt{chronyd} é quem controla o serviço \texttt{ntpd}. As configurações
-e alterações devem ser feitas nele.
+A partir de agora, será possível ver a utilização das máquinas do cluster pela interface web.
 
-\textbf{IMPORTANTE: Desligar o horário de verão que está configurado para o sistema} ao voltar de férias. Nota para o Vitor.
+%Como verificar se o 
