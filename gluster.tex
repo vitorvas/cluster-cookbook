@@ -31,4 +31,83 @@ As diferenças em segundos estão corretas, já que o comando é executado seque
 No cluster LTHN, o serviço \texttt{chronyd} é quem controla o serviço \texttt{ntpd}. As configurações
 e alterações devem ser feitas nele.
 
-\textbf{IMPORTANTE: Desligar o horário de verão que está configurado para o sistema} ao voltar de férias. Nota para o Vitor.
+%\textbf{IMPORTANTE: Desligar o horário de verão que está configurado para o sistema} ao voltar de férias. Nota para o Vitor.
+
+Devido as mudanças no firewall do CDTN, apenas a máquina \texttt{playerone}
+acessa o servidor \texttt{ntpd [lagrange.cdtn.br]}.
+Por essa razão, as máquinas escravas tiverem que ser reconfiguradas
+para usar o mestre como provedor de horas.Essa manutenção emergencial ocorreu
+apenas para as máquinas em uso nada data. São elas: \texttt{irineu, galo, marvin, zumbi coragem}.]
+
+  O comando \texttt{chronyc sources} mostra quais servidores estão em uso pelo serviço de horas.
+  
+Com isso, caso as máquinas estejam desincronizadas, é necessário conferir se o servidor está com o horário atualizado:
+
+%  [root@playerone ~]# chronyc sources
+%  210 Number of sources = 2
+%  MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+%  ===============================================================================
+%  ^- lagrange.cdtn.br              2   8   377   124  -1376us[-1580us] +/-   46ms
+%  ^* gps.jd.ntp.br                 1   7   377   123    -67us[ -271us] +/- 5463us
+
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+  [root@playerone ~]# timedatectl 
+  Local time: Qua 2024-08-14 15:52:21 -03
+  Universal time: Qua 2024-08-14 18:52:21 UTC
+  RTC time: Qua 2024-08-14 18:52:21
+  Time zone: America/Recife (-03, -0300)
+  NTP enabled: yes
+  NTP synchronized: yes
+  RTC in local TZ: no
+  DST active: n/a
+\end{lstlisting}
+
+Com o servidor mestre com o hora atualizada e o serviço disponível, basta forçar a atualização
+da hora nas máquinas escravas:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+  [root@playerone ~]# bsh.nomordac chronyc -a makestep
+  *****irineu*****
+  200 OK
+  *****galo*****
+  200 OK
+  *****marvin*****
+  200 OK
+  *****zumbi*****
+  200 OK
+  *****coragem*****
+  200 OK
+\end{lstlisting}
+
+É possível verificar que as máquinas agora utilizam o servidor \texttt{playerone} como provedor
+de horas:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@playerone ~]# bsh.nomordac chronyc sources
+*****irineu*****
+210 Number of sources = 1
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^* playerone.usuarios.cdtn.>     2   6   377    14  +5673ns[  +16us] +/- 5562us
+*****galo*****
+210 Number of sources = 1
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^* playerone.usuarios.cdtn.>     2   6   377    15    +22us[  +29us] +/- 5570us
+*****marvin*****
+210 Number of sources = 1
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^* playerone.usuarios.cdtn.>     2   6   377    11   -701ns[+6426ns] +/- 5563us
+*****zumbi*****
+210 Number of sources = 1
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^* playerone.usuarios.cdtn.>     2   6   377    13  +1583ns[  +41us] +/- 5548us
+*****coragem*****
+210 Number of sources = 1
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^* playerone.usuarios.cdtn.>     2   6   377    10    +65ns[  +20us] +/- 5569us
+\end{lstlisting}
