@@ -1,0 +1,29 @@
+\chapter{A \textit{rede não funciona}}
+
+No CentOS 7 são basicamente dois sistemas de rede interligados: \textit{network.service} e \textit{Network.Manager}.
+O primeiro é o sistema de rede propriamente dito e o segunto é o gerenciador gráfico, acessível via interface gráfica (na barra no canto superior direito).
+
+Ironicamente, ambos estão interconectados. A tentativa de inabilitar (\texttt{systemctl disable Network.Manager}) pode deixar o cliente \textit{DHCP} órfão o que
+impossibilitará a o re-início do serviço de rede (\texttt{systemctl restart network.service}).
+
+%  [root@playerone ~]# chronyc sources
+%  210 Number of sources = 2
+%  MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+%  ===============================================================================
+%  ^- lagrange.cdtn.br              2   8   377   124  -1376us[-1580us] +/-   46ms
+%  ^* gps.jd.ntp.br                 1   7   377   123    -67us[ -271us] +/- 5463us
+
+Lembrando que as interfaces \texttt{p1p1} e \texttt{p1p2} são as responsáveis pela conexão entre a \textit{Playerone} e as demais ``escravas''. Assim, ao menos
+uma delas deve estar plugada (com o cabo de rede conectado) para que o \textit{Playerone} possa funcionar como gateway da sub-rede do cluster.
+
+%\begin{lstlisting}[language=bash,basicstyle=\small]
+%  [root@playerone ~]# timedatectl 
+%  Local time: Qua 2024-08-14 15:52:21 -03
+%  Universal time: Qua 2024-08-14 18:52:21 UTC
+%  RTC time: Qua 2024-08-14 18:52:21
+%  Time zone: America/Recife (-03, -0300)
+%  NTP enabled: yes
+%  NTP synchronized: yes
+%  RTC in local TZ: no
+%  DST active: n/a
+%\end{lstlisting}
