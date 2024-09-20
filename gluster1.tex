@@ -1,0 +1,60 @@
+\chapter{O \textit{gluster não monta}}
+
+Há um bug no \texttt{gluster 4.1.5} que evita a montagem de volumes.
+No nosso caso, ocorre mesmo quando tenta-se montar apenas os volumes localizados na \textit{playerone}, ou seja, o texttt{gv-apps}.
+
+Caso o comando \texttt{mount-a} ou \texttt{mount -t glusterfs playerone:/gv-apps /gv/apps} não funcionem (exemplo abaixo):
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+  Erro. Olhar log.
+\end{lstlisting}
+
+Uma solução encontrada é parar o volume:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@playerone ~]# gluster volume stop gv-apps
+Stopping volume will make its data inaccessible. Do you want to continue? (y/n) y
+volume stop: gv-apps: success
+\end{lstlisting}
+
+Logo após é necessário iniciar o volume:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@playerone ~]# gluster volume start gv-apps
+volume stop: gv-apps: success
+\end{lstlisting}
+
+É possível verificar se o volume subiu corretamente com o seguinte comando:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@playerone ~]# gluster volume status
+Status of volume: gv-apps
+Gluster process                             TCP Port  RDMA Port  Online  Pid
+------------------------------------------------------------------------------
+Brick playerone:/brick/p0/apps              49155     0          Y       22652
+Brick playerone:/brick/p1/apps              49156     0          Y       22674
+Brick playerone:/brick/p2/apps              49157     0          Y       22696
+ 
+Task Status of Volume gv-apps
+------------------------------------------------------------------------------
+There are no active volume tasks
+ 
+Volume gv-data is not started
+
+\end{lstlisting}
+
+Quando os volumes estão corretamente iniciados, as portas IP aparecem numeradas,
+uma porta para cada \textit{brick}.
+
+Este procedimento feito, ainda é necessário montar os volumes no sistema de arquivos. Isso pode ser feito com os comandos \texttt{mount -a} que vai acessar a tabela de montagem (\texttt{/etc/fstab}) ou com o comando específico para montagem dos volumes gluster: \texttt{mount -t glusterfs playerone:/gv-apps /gv/app}.
+
+Se o volume foi corretamente montado, será possível vê-lo com o comando \texttt{df -h | grep gv}:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@playerone ~]# df -h | grep gv
+playerone:/gv-apps                1,3T  198G  1,1T  16% /gv/apps
+\end{lstlisting}
+
+
+
+
