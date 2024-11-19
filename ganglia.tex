@@ -1,0 +1,56 @@
+\chapter{A \textit{Adicionando um nó ao monitoramento Ganglia}}
+
+O Ganglia funciona com dois serviços:
+
+\begin{enumerate}
+gmetad
+gmond
+\end{enumerate}
+
+Os dados são exibidos via interface web Apache e, como no nosso caso, o nó principal é monitorado mas também é o nó que fornece os dados à interface web do Ganglia, isso pode causar confusão.
+
+Então, o que deve ser modificado?
+
+\subsection{Nó}
+
+No nó, basta, no arquivo \texttt{/etc/ganglia/gmond.conf}, na seção \texttt{upd_send_channel}, alterar 
+a variável \texttt{host} para o valor de ip dinâmico do host playerone (10.20.132.100), como indicado abaixo:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+udp_send_channel {
+  #bind_hostname = yes # Highly recommended, soon to be default.
+                       # This option tells gmond to use a source address
+                       # that resolves to the machine's hostname.  Without
+                       # this, the metrics may appear to come from any
+                       # interface and the DNS names associated with
+                       # those IPs will be used to create the RRDs.
+#  mcast_join = 239.2.11.71
+  host = 10.20.132.100 #13.13.13.1
+  port = 8649
+  ttl = 1
+}\end{lstlisting}
+
+A princípio é possível usar o hostname (playerone) mas não foram feitos testes.
+
+A seguir, reiniciar o serviço \texttt{gmond.service} com \texttt{systemclt restart gmond.service}.
+
+\subsection{Host}
+
+No host, é o arquivo de meta dados que dever ser moficado.
+Em \texttt{/etc/ganglia/gmetad.conf} alterar a linha com o \texttt{data_source} dos nós monitorados:
+
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+data_source "cluster-LTHN" 10.20.132.100 10.20.132.157 10.20.132.38 <ip_do_no_a_adicionar>
+\end{lstlisting}
+
+Em seguida, reiniciar todos os serviços.
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+ [root@playerone ganglia]# systemctl restart gmond.service gmetad.service httpd.service
+\end{lstlisting}
+
+
+Atenção: ainda sem uma explicação, às vezes é necessário voltar ao nó e re-iniciar o serviço \texttt{gmong.service} para 
+que o número de CPUs disponíveis apresentado pela interface web do Ganglia reflita corretamente o número de CPUs.
+

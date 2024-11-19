@@ -1,0 +1,77 @@
+\chapter{A \textit{DHCP nas máquinas nós}}
+
+A configuração inicial do cluster fixava os IPs dos nós de forma estática numa rede fictícia (13.13.13.x). 
+Isso inviabiliza o uso das máquinas na rede CDTN. Para isso, é preciso reconfigurar as máquinas de modo a que passem a usar um ip dinâmico oferecido pela rede.
+
+A primeira modificação é remover o arquivo \texttt{/etc/hosts} que contém a lista fixa de ips das máquinas. Caso não deseje remover o arquivo, basta 
+renomeá-lo. Por exemplo:
+
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+  [root@playerone ~]# mv /etc/hosts /etc/hosts.backup_dia_mes 
+\end{lstlisting}
+
+
+Em sequida, é necessário adicionar um arquivo de configuração para o protocolo DHCP. 
+No diretório \texttt{/etc/NetworkManager/conf.d/}, criar o arquivo texttt{dhcp-client.conf} com o comando \texttt{touch} como no procedimento a seguir:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@coragem ~]# cd /etc/NetworkManager/conf.d/
+[root@coragem ~]# touch dhcp-client.conf
+[root@coragem conf.d]# ls
+dhcp-client.conf
+\end{lstlisting}
+
+Neste arquivo deve ser adicionado o conteúdo de configuração exibido abaixo:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[main]
+dhcp=internal
+\end{lstlisting}
+
+A partir desse instante, quando acionado, o serviço DHCP saberá como configurar a interface.
+
+%Entretanto, ainda são necessárias algumas ações. A primeira ação consiste em desabilitar a interface de rede que está configurada para a rede estática.
+%\begin{lstlisting}[language=bash,basicstyle=\small]
+%\end{lstlisting}
+
+Se a interface a ser usada for, por exemplo, a interface \texttt{em2} (segunda porta da esquerda para a direita na parte traseiro do nó), deve-se configurar 
+a interface:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+nmcli connection modify em2 ipv4.dhcp-hostname coragem
+nmcli connection modify em2 ipv4.dhcp-send-hostname yes
+\end{lstlisting}
+
+Logo a seguir colocá-la ativa:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+nmcli connection up em2
+\end{lstlisting}
+
+Vale então re-iniciar o serviço de rede: \texttt{systemctl restart NetworkManager}.
+
+A partir de agora, a interface deve estar ativa. Pode-se verificar com o comando \texttt{nmcli}. Uma saída similar deve ser apresentada:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@coragem ~]# nmcli connection show
+NAME  UUID                                  TYPE      DEVICE
+em2   02f29314-b091-43dc-aee0-98d844e50626  ethernet  em2
+em1   27f166ac-f6ba-4aee-9f62-ff3100e0492c  ethernet  --
+em1   7b947e08-6d17-4208-8aa3-19f10096b3ce  ethernet  --
+em4   d84e4915-9022-43e2-baf0-f4a65adb566f  ethernet  --
+\end{lstlisting}
+
+Agora o comando \texttt{nslookup} deve responder com o ip dinâmico da máquina quando acionado:
+
+\begin{lstlisting}[language=bash,basicstyle=\small]
+[root@coragem ~]# nslookup coragem
+Server:         10.20.129.100
+Address:        10.20.129.100#53
+
+Name:   coragem.usuarios.cdtn.br
+Address: 10.20.132.38
+
+\end{lstlisting}
+
+
